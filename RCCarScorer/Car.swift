@@ -7,10 +7,17 @@
 
 import Foundation
 
-struct Car: Identifiable {
-    let id = UUID()
-    var name: String
-    var lapCount: Int = 0
-    var lapTimes: [Double] = []
-    var lastLapTime: Double = 0 // Added property
+class Car: Identifiable {
+    let id: UUID
+    let name: String
+    var lapCount: Int
+    var lapTimes: [Double]
+    var lastLapTime: Double = 0
+
+    init(id: UUID = UUID(), name: String, lapCount: Int = 0, lapTimes: [Double] = []) {
+        self.id = id
+        self.name = name
+        self.lapCount = lapCount
+        self.lapTimes = lapTimes
+    }
 }

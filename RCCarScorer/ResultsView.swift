@@ -1,23 +1,16 @@
-//
-//  ResultsView.swift
-//  RCCarScorer
-//
-//  Created by Ted Brown on 3/16/25.
-//
-
-
 import SwiftUI
 
-struct ResultsView: View {
+struct RaceResults: View {
     @ObservedObject var raceManager: RaceManager
-    @Environment(\.presentationMode) var presentationMode
+    @State var cars: [Car] = []
+    let raceID: String
 
     var sortedCars: [Car] {
-        raceManager.cars.sorted {
+        cars.sorted {
             if $0.lapCount != $1.lapCount {
                 return $0.lapCount > $1.lapCount
             } else {
-                return $0.lapTimes.reduce(0, +) < $1.lapTimes.reduce(0, +)
+                return $0.calculateTotalLapTime() < $1.calculateTotalLapTime()
             }
         }
     }
@@ -36,15 +29,36 @@ struct ResultsView: View {
                     Text(car.name)
                         .font(.headline)
                     Text("Laps: \(car.lapCount)")
-                    Text("Total Time: \(formattedTime(car.lapTimes.reduce(0, +)))") // Use formattedTime
+                    Text("Total Time: \(formattedTime(car.calculateTotalLapTime()))")
                 }
             }
             .navigationTitle("Race Results")
-            .toolbar {
-                Button("Done") {
-                    presentationMode.wrappedValue.dismiss()
-                }
+            .onAppear {
+                fetchLaps()
             }
         }
+    }
+
+    func fetchLaps() {
+        raceManager.fetchLaps(raceID: raceID) { laps in
+            raceManager.organizeLapsByCar(laps: laps) { cars in
+                self.cars = cars
+            }
+        }
+    }
+
+    init(raceID: String, raceManager: RaceManager) {
+        self.raceID = raceID
+        self.raceManager = raceManager
+    }
+}
+
+extension Car {
+    func calculateTotalLapTime() -> Double {
+        var totalLapTime: Double = 0.0
+        for lapTime in lapTimes {
+            totalLapTime += lapTime
+        }
+        return totalLapTime
     }
 }

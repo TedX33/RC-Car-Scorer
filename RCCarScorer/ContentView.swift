@@ -70,7 +70,7 @@ struct ContentView: View {
         }
         .padding()
         .sheet(isPresented: $showingResults) {
-            ResultsView(raceManager: raceManager)
+            RaceResults(raceID: raceManager.raceID, raceManager: raceManager)
         }
     }
 
@@ -81,12 +81,12 @@ struct ContentView: View {
             }
         }
 
-        func stopStopwatch() {
+    func stopStopwatch() {
             timer?.invalidate()
             timer = nil
         }
 
-        func formattedTime(_ timeInterval: Double) -> String {
+    func formattedTime(_ timeInterval: Double) -> String {
             let minutes = Int(timeInterval / 60)
             let seconds = Int(timeInterval.truncatingRemainder(dividingBy: 60))
             let hundredths = Int((timeInterval * 100).truncatingRemainder(dividingBy: 100)) // Calculate hundredths
