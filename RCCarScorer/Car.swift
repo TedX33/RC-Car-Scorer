@@ -13,7 +13,8 @@ class Car: Identifiable {
     var lapCount: Int
     var lapTimes: [Double]
     var lastLapTime: Double = 0
-
+    var totalTime: Double = 0
+    
     init(id: UUID = UUID(), name: String, lapCount: Int = 0, lapTimes: [Double] = []) {
         self.id = id
         self.name = name

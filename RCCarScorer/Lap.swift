@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Lap{
+struct Lap {
     let raceID: String
     let carID: String
     let lapTime: Double
