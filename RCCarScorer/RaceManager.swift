@@ -159,4 +159,3 @@ class RaceManager: ObservableObject {
         db.collection("cars").document(newCar.id.uuidString).setData(["name": newCar.name])
     }
 }
-
