@@ -70,7 +70,7 @@ struct ContentView: View {
         }
         .padding()
         .sheet(isPresented: $showingResults) {
-            RaceResults(raceID: raceManager.raceID, raceManager: raceManager)
+            ResultsView(raceID: raceManager.raceID, raceManager: raceManager)
         }
     }
 

@@ -1,10 +1,12 @@
 import SwiftUI
+import FirebaseFirestore
 
 struct ResultsView: View {
     @ObservedObject var raceManager: RaceManager
     @State var cars: [Car] = []
     let raceID: String
-    
+    let db = Firestore.firestore() // ✅ Firestore reference added
+
     var sortedCars: [Car] {
         cars.sorted {
             if $0.lapCount != $1.lapCount {
@@ -14,14 +16,14 @@ struct ResultsView: View {
             }
         }
     }
-    
+
     func formattedTime(_ timeInterval: Double) -> String {
         let minutes = Int(timeInterval / 60)
         let seconds = Int(timeInterval.truncatingRemainder(dividingBy: 60))
         let milliseconds = Int((timeInterval * 1000).truncatingRemainder(dividingBy: 1000))
         return String(format: "%02d:%02d.%03d", minutes, seconds, milliseconds)
     }
-    
+
     var body: some View {
         NavigationView {
             List(sortedCars) { car in
@@ -38,79 +40,56 @@ struct ResultsView: View {
             }
         }
     }
-    
+
     func fetchLaps() {
         raceManager.fetchLaps(raceID: raceID) { laps in
             raceManager.organizeLapsByCar(laps: laps) { cars in
                 self.cars = cars
             }
-            print("Fetched laps: \(laps)") // Added print statement
+            print("Fetched laps: \(laps)")
             organizeLapsByCarAndSort(laps: laps)
         }
     }
-    
+
     init(raceID: String, raceManager: RaceManager) {
         self.raceID = raceID
         self.raceManager = raceManager
     }
-    
-    
+
     func organizeLapsByCarAndSort(laps: [Lap]) {
         var carDictionary: [String: [Lap]] = [:]
-        
+
         for lap in laps {
-            if carDictionary[lap.carID] == nil {
-                carDictionary[lap.carID] = [lap]
-            } else {
-                carDictionary[lap.carID]?.append(lap)
-            }
+            carDictionary[lap.carID, default: []].append(lap)
         }
-        
+
         var cars: [Car] = []
         let dispatchGroup = DispatchGroup()
-        
+
         for (carID, laps) in carDictionary {
             dispatchGroup.enter()
-            
-            self.db.collection("races").document(self.raceID).collection("cars").document(carID).getDocument { (document, error) in
-                if let document = document, document.exists {
-                    if let carName = document.data()?["name"] as? String {
-                        let totalTime: Double = laps.reduce(0.0) { (result: Double, lap: Lap) -> Double in
-                            return result + lap.lapTime
-                        }
-                        let car = Car(name: carName, lapTimes: laps.map { $0.lapTime }, carID: carID, totalTime: totalTime)
-                        cars.append(car)
-                    } else {
-                        let totalTime: Double = laps.reduce(0.0) { (result: Double, lap: Lap) -> Double in
-                            return result + lap.lapTime
-                        }
-                        let car = Car(name: "Unknown", lapTimes: laps.map { $0.lapTime }, carID: carID, totalTime: totalTime)
-                        cars.append(car)
-                    }
-                } else {
-                    let totalTime: Double = laps.reduce(0.0) { (result: Double, lap: Lap) -> Double in
-                        return result + lap.lapTime
-                    }
-                    let car = Car(name: "Unknown", lapTimes: laps.map { $0.lapTime }, carID: carID, totalTime: totalTime)
-                    cars.append(car)
-                }
-                dispatchGroup.leave()
+
+            db.collection("races").document(self.raceID).collection("cars").document(carID).getDocument { (document, error) in
+                defer { dispatchGroup.leave() }
+
+                let carName = document?.data()?["name"] as? String ?? "Unknown"
+                let totalTime = laps.reduce(0.0) { $0 + $1.lapTime }
+
+                let car = Car(name: carName, lapTimes: laps.map { $0.lapTime })
+
+                cars.append(car)
             }
-        
+        }
+
         dispatchGroup.notify(queue: .main) {
-            let sortedCars = cars.sorted(using: KeyPathComparator(\Car.totalTime, order: .forward))
-            self.cars = sortedCars
+            self.cars = cars.sorted { $0.totalTime < $1.totalTime }
         }
     }
- 
 }
-    extension Car {
-        func calculateTotalLapTime() -> Double {
-            var totalLapTime: Double = 0.0
-            for lapTime in lapTimes {
-                totalLapTime += lapTime
-            }
-            return totalLapTime
-        }
+
+extension Car {
+    func calculateTotalLapTime() -> Double {
+        lapTimes.reduce(0.0, +)
     }
+}
 

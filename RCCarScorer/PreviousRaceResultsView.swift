@@ -57,7 +57,7 @@ struct PreviousRaceResultsView: View {
 
     private func disclosureGroupContent(for race: (id: String, raceName: String, startTime: Date)) -> some View {
         if selectedRaceID == race.id {
-            AnyView(RaceResults(raceID: race.id, raceManager: raceManager))
+            AnyView(ResultsView(raceID: race.id, raceManager: raceManager))
         } else {
             AnyView(Text("Select Race to view results"))
         }
