@@ -12,7 +12,7 @@ import FirebaseFirestore
 struct PreviousRaceResultsView: View {
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject var raceManager: RaceManager
-    @State private var races: [(id: String, raceName: String, createdAt: Date)] = []
+    @State private var races: [(id: String, raceName: String, startTime: Date)] = []
     @State private var selectedRaceID: String? = nil
     let db = Firestore.firestore()
 
@@ -21,29 +21,7 @@ struct PreviousRaceResultsView: View {
             VStack {
                 List {
                     ForEach(races, id: \.id) { race in
-                        DisclosureGroup(
-                            content: {
-                                if selectedRaceID == race.id {
-                                    RaceResults(raceID: race.id, raceManager: raceManager)
-                                } else {
-                                    Text("Select Race to view results")
-                                }
-                            },
-                            label: {
-                                HStack {
-                                    Text(race.raceName)
-                                    Spacer()
-                                    Text(race.createdAt, style: .date)
-                                }
-                            }
-                        )
-                        .onTapGesture {
-                            if selectedRaceID == race.id {
-                                selectedRaceID = nil
-                            } else {
-                                selectedRaceID = race.id
-                            }
-                        }
+                        raceDisclosureGroup(for: race)
                     }
                 }
             }
@@ -56,6 +34,40 @@ struct PreviousRaceResultsView: View {
             .onAppear {
                 fetchRaces()
             }
+        }
+    }
+
+    private func raceDisclosureGroup(for race: (id: String, raceName: String, startTime: Date)) -> some View {
+        DisclosureGroup(
+            content: {
+                disclosureGroupContent(for: race)
+            },
+            label: {
+                HStack {
+                    Text(race.raceName)
+                    Spacer()
+                    Text(race.startTime, style: .date)
+                }
+            }
+        )
+        .onTapGesture {
+            handleTap(race: race)
+        }
+    }
+
+    private func disclosureGroupContent(for race: (id: String, raceName: String, startTime: Date)) -> some View {
+        if selectedRaceID == race.id {
+            AnyView(RaceResults(raceID: race.id, raceManager: raceManager))
+        } else {
+            AnyView(Text("Select Race to view results"))
+        }
+    }
+
+    private func handleTap(race: (id: String, raceName: String, startTime: Date)) {
+        if selectedRaceID == race.id {
+            selectedRaceID = nil
+        } else {
+            selectedRaceID = race.id
         }
     }
 
@@ -75,7 +87,7 @@ struct PreviousRaceResultsView: View {
                 let data = document.data()
                 if let raceName = data["raceName"] as? String,
                    let timestamp = data["startTime"] as? Timestamp {
-                    return (id: document.documentID, raceName: raceName, createdAt: timestamp.dateValue())
+                    return (id: document.documentID, raceName: raceName, startTime: timestamp.dateValue())
                 }
                 return nil
             }

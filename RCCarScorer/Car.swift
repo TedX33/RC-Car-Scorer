@@ -9,7 +9,7 @@ import Foundation
 
 class Car: Identifiable {
     let id: UUID
-    let name: String
+    var name: String
     var lapCount: Int
     var lapTimes: [Double]
     var lastLapTime: Double = 0
