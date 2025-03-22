@@ -1,10 +1,17 @@
+//
+//  MainView.swift
+//  RCCarScorer
+//
+//  Created by Ted Brown on 3/18/25.
+//
+
+
 import SwiftUI
 
 struct MainView: View {
     @StateObject var raceManager = RaceManager()
     @State private var showingScoreRace = false
     @State private var showingPreviousResults = false
-    @State private var showingCreateRace = false // New state for CreateRaceView
 
     var body: some View {
         NavigationView {
@@ -22,21 +29,13 @@ struct MainView: View {
                     showingPreviousResults = true
                 }
                 .padding()
-
-                Button("Create a Race") { // New button
-                    showingCreateRace = true
-                }
-                .padding()
             }
             .navigationTitle("Main Menu")
             .sheet(isPresented: $showingScoreRace) {
-                ContentView(raceManager: raceManager)
+                ContentView(raceManager: raceManager) // Passing raceManager
             }
             .sheet(isPresented: $showingPreviousResults) {
                 PreviousRaceResultsView(raceManager: raceManager)
-            }
-            .sheet(isPresented: $showingCreateRace) { // Present CreateRaceView
-                CreateRaceView()
             }
         }
     }
