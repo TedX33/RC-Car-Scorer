@@ -1,3 +1,10 @@
+//
+//  MainView.swift
+//  RCCarScorer
+//
+//  Created by Ted Brown on 3/16/25.
+//
+//
 import SwiftUI
 
 struct MainView: View {
