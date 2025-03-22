@@ -113,7 +113,7 @@ struct PreviousRaceResultsView: View {
 
                 for (carID, laps) in carDictionary {
                     dispatchGroup.enter()
-                    Firestore.firestore().collection("races").document(raceID).collection("cars").document(carID).getDocument { document, error in
+                    Firestore.firestore().collection("cars").document(carID).getDocument { document, error in
                         print("Fetching car info for carID:", carID)
                         print(document)
                         if let document = document, let carName = document.data()?["name"] as? String {
